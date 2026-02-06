@@ -1,8 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Flame, Trophy, Footprints, Bike, Waves, Zap, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Flame, Trophy, Footprints, Bike, Waves, Zap, TrendingUp, Plus } from "lucide-react";
 import { getUserStats, getUserIdFromCookies } from "./actions";
 import { getLevelInfo } from "@/lib/constants";
+import { LogActivityDialog } from "@/components/log-activity-dialog";
 
 // Recent activities would come from a real activity log in production
 const recentActivities = [
@@ -56,14 +58,13 @@ export default async function Dashboard() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-100 dark:border-orange-900/30">
           <Flame
-            className={`w-7 h-7 ${
-              streakActive
-                ? "text-orange-500 fill-orange-500"
-                : "text-muted-foreground"
-            }`}
+            className={`w-7 h-7 ${streakActive
+              ? "text-orange-500 fill-orange-500"
+              : "text-muted-foreground"
+              }`}
           />
           <span className="text-lg font-bold text-orange-600 dark:text-orange-400">{streakLength}</span>
           <span className="text-[10px] text-muted-foreground uppercase tracking-wide">day streak</span>
@@ -106,7 +107,7 @@ export default async function Dashboard() {
         <Card className="shadow-soft border-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 overflow-hidden relative">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
           <CardContent className="p-5 flex items-center gap-4 relative">
-            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center flex-shrink-0">
               <Trophy className="w-6 h-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
@@ -114,12 +115,26 @@ export default async function Dashboard() {
               <h4 className="font-semibold truncate">
                 {nextAchievement.name}
               </h4>
-              {nextAchievement.description && (
-                <p className="text-sm text-muted-foreground truncate">
-                  {nextAchievement.description}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                {nextAchievement.trigger === "streak" && nextAchievement.streakLength && (
+                  <>Maintain a {nextAchievement.streakLength}-day streak</>
+                )}
+                {nextAchievement.trigger === "metric" && nextAchievement.metricValue && (
+                  <>
+                    Reach {nextAchievement.metricValue.toLocaleString()}{" "}
+                    {nextAchievement.metricName ?? "points"}
+                  </>
+                )}
+                {nextAchievement.trigger === "api" && nextAchievement.description}
+                {!nextAchievement.trigger && nextAchievement.description}
+              </p>
             </div>
+            <LogActivityDialog>
+              <Button size="lg" className="flex-shrink-0 gap-1.5 shadow-soft">
+                <Plus className="w-4 h-4" />
+                Log Workout
+              </Button>
+            </LogActivityDialog>
           </CardContent>
         </Card>
       )}
@@ -128,7 +143,7 @@ export default async function Dashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" /> 
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
             Recent Activity
           </h3>
         </div>

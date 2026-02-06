@@ -57,7 +57,7 @@ export function NavBar() {
           <LogActivityDialog>
             <Button className="w-full gap-2 h-11 shadow-soft" size="lg">
               <Plus className="w-5 h-5" />
-              Log Activity
+              Log Workout
             </Button>
           </LogActivityDialog>
         </div>

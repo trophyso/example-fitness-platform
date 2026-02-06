@@ -89,7 +89,7 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
         <div className="p-6 pb-0">
           <DialogHeader>
-            <DialogTitle className="text-lg">Log Activity</DialogTitle>
+            <DialogTitle className="text-lg">Log Workout</DialogTitle>
             <DialogDescription className="text-sm">
               Record your workout to earn XP and climb the leaderboard.
             </DialogDescription>
