@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, User, PlusCircle } from "lucide-react";
+import { Home, Trophy, User, PlusCircle, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +14,7 @@ export function NavBar() {
   const links = [
     { href: "/", label: "Home", icon: Home },
     { href: "/leaderboards", label: "Leaderboards", icon: Trophy },
+    { href: "/achievements", label: "Achievements", icon: Award },
     { href: "/profile", label: "Profile", icon: User },
   ];
 
@@ -22,7 +23,7 @@ export function NavBar() {
       {/* Desktop Sidebar */}
       <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card fixed left-0 top-0 z-30">
         <div className="p-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-black">
             TrophyFitness
           </h1>
         </div>

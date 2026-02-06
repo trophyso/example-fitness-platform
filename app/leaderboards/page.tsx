@@ -3,9 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Trophy, Footprints, Bike, Waves } from "lucide-react";
 import { getLeaderboard } from "@/app/actions";
+import { LEADERBOARD_KEYS } from "@/lib/constants";
 
-async function LeaderboardList({ metric }: { metric: string }) {
-  const data = await getLeaderboard(metric);
+async function LeaderboardList({
+  leaderboardKey,
+  unit,
+}: {
+  leaderboardKey: string;
+  unit: string;
+}) {
+  const data = await getLeaderboard(leaderboardKey);
 
   if (data.length === 0) {
     return (
@@ -18,7 +25,8 @@ async function LeaderboardList({ metric }: { metric: string }) {
   return (
     <div className="space-y-4">
       {data.map((entry, index) => {
-        const displayName = entry.userName || `User ${entry.userId.slice(0, 8)}`;
+        const displayName =
+          entry.userName || `User ${entry.userId.slice(0, 8)}`;
         const initials = displayName.slice(0, 2).toUpperCase();
 
         return (
@@ -42,7 +50,7 @@ async function LeaderboardList({ metric }: { metric: string }) {
             <div className="font-bold text-lg">
               {entry.value.toLocaleString()}
               <span className="text-sm font-normal text-muted-foreground ml-1">
-                {metric.includes("swum") ? "m" : "km"}
+                {unit}
               </span>
             </div>
             {index === 0 && <Trophy className="w-5 h-5 text-yellow-500" />}
@@ -80,10 +88,10 @@ export default function LeaderboardsPage() {
         <TabsContent value="run">
           <Card className="border-none shadow-none bg-transparent">
             <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">Total Distance Run</CardTitle>
+              <CardTitle className="text-lg">Weekly Distance Run</CardTitle>
             </CardHeader>
             <CardContent className="px-0">
-              <LeaderboardList metric="distance_run" />
+              <LeaderboardList leaderboardKey={LEADERBOARD_KEYS.run} unit="km" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -91,10 +99,13 @@ export default function LeaderboardsPage() {
         <TabsContent value="cycle">
           <Card className="border-none shadow-none bg-transparent">
             <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">Total Distance Cycled</CardTitle>
+              <CardTitle className="text-lg">Weekly Distance Cycled</CardTitle>
             </CardHeader>
             <CardContent className="px-0">
-              <LeaderboardList metric="distance_cycled" />
+              <LeaderboardList
+                leaderboardKey={LEADERBOARD_KEYS.cycle}
+                unit="km"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -102,10 +113,13 @@ export default function LeaderboardsPage() {
         <TabsContent value="swim">
           <Card className="border-none shadow-none bg-transparent">
             <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">Total Distance Swum</CardTitle>
+              <CardTitle className="text-lg">Weekly Distance Swum</CardTitle>
             </CardHeader>
             <CardContent className="px-0">
-              <LeaderboardList metric="distance_swum" />
+              <LeaderboardList
+                leaderboardKey={LEADERBOARD_KEYS.swim}
+                unit="m"
+              />
             </CardContent>
           </Card>
         </TabsContent>

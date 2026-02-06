@@ -1,15 +1,29 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Footprints, Bike, Waves, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { logActivity, ActivityType } from "@/app/actions";
+import { logActivity } from "@/app/actions";
+import { ActivityType } from "@/lib/constants";
+import { getUserCity } from "@/lib/city";
 
 export function LogActivityDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -18,7 +32,6 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
 
   // Form States
   const [distance, setDistance] = useState("");
-  const [city, setCity] = useState("London");
   const [pace, setPace] = useState("run");
   const [style, setStyle] = useState("freestyle");
 
@@ -30,6 +43,9 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Get city from localStorage/timezone
+    const city = getUserCity();
+
     startTransition(async () => {
       const result = await logActivity({
         userId: "current_user",
@@ -37,7 +53,8 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
         distance: distNum,
         city,
         pace: activeTab === "run" ? (pace as "walk" | "run") : undefined,
-        style: activeTab === "swim" ? (style as "freestyle" | "breaststroke") : undefined,
+        style:
+          activeTab === "swim" ? (style as "freestyle" | "breaststroke") : undefined,
       });
 
       if (result.success) {
@@ -59,17 +76,29 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle>Log Activity</DialogTitle>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActivityType)} className="w-full">
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as ActivityType)}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="run" className="gap-2"><Footprints className="w-4 h-4"/> Run</TabsTrigger>
-            <TabsTrigger value="cycle" className="gap-2"><Bike className="w-4 h-4"/> Cycle</TabsTrigger>
-            <TabsTrigger value="swim" className="gap-2"><Waves className="w-4 h-4"/> Swim</TabsTrigger>
+            <TabsTrigger value="run" className="gap-2">
+              <Footprints className="w-4 h-4" /> Run
+            </TabsTrigger>
+            <TabsTrigger value="cycle" className="gap-2">
+              <Bike className="w-4 h-4" /> Cycle
+            </TabsTrigger>
+            <TabsTrigger value="swim" className="gap-2">
+              <Waves className="w-4 h-4" /> Swim
+            </TabsTrigger>
           </TabsList>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="distance">Distance ({activeTab === "swim" ? "meters" : "km"})</Label>
+              <Label htmlFor="distance">
+                Distance ({activeTab === "swim" ? "meters" : "km"})
+              </Label>
               <Input
                 id="distance"
                 type="number"
@@ -81,21 +110,11 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-
             {activeTab === "run" && (
               <div className="space-y-2">
                 <Label>Pace</Label>
                 <Select value={pace} onValueChange={setPace}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -110,7 +129,7 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
               <div className="space-y-2">
                 <Label>Style</Label>
                 <Select value={style} onValueChange={setStyle}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

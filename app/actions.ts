@@ -2,30 +2,12 @@
 
 import { TrophyApiClient, TrophyApi } from "@trophyso/node";
 import { revalidatePath } from "next/cache";
+import { LogActivityParams, UserStats } from "@/lib/types";
 
 // Initialize Trophy SDK
 const trophy = new TrophyApiClient({
   apiKey: process.env.TROPHY_API_KEY as string,
 });
-
-export type ActivityType = "run" | "cycle" | "swim";
-
-interface LogActivityParams {
-  type: ActivityType;
-  distance: number;
-  city?: string;
-  pace?: "walk" | "run";
-  style?: "freestyle" | "breaststroke";
-  userId: string;
-}
-
-// Types for our normalized user stats response
-export interface UserStats {
-  streak: TrophyApi.StreakResponse | null;
-  achievements: TrophyApi.UserAchievementWithStatsResponse[];
-  points: TrophyApi.GetUserPointsResponse | null;
-  metrics: TrophyApi.MetricResponse[];
-}
 
 export async function logActivity(params: LogActivityParams) {
   if (!process.env.TROPHY_API_KEY) {
@@ -36,31 +18,34 @@ export async function logActivity(params: LogActivityParams) {
   const { type, distance, city, pace, style, userId } = params;
 
   let metricKey = "";
-  const attributes: Record<string, string> = {};
-
-  if (city) attributes.city = city;
+  const eventAttributes: Record<string, string> = {};
 
   switch (type) {
     case "run":
       metricKey = "distance_run";
-      if (pace) attributes.pace = pace;
+      if (pace) eventAttributes.pace = pace;
       break;
     case "cycle":
       metricKey = "distance_cycled";
       break;
     case "swim":
       metricKey = "distance_swum";
-      if (style) attributes.style = style;
+      if (style) eventAttributes.style = style;
       break;
   }
+
+  // City is a user attribute, not an event attribute
+  const userAttributes: Record<string, string> = {};
+  if (city) userAttributes.city = city;
 
   try {
     const response = await trophy.metrics.event(metricKey, {
       user: {
         id: userId,
+        attributes: Object.keys(userAttributes).length > 0 ? userAttributes : undefined,
       },
       value: distance,
-      attributes: attributes,
+      attributes: Object.keys(eventAttributes).length > 0 ? eventAttributes : undefined,
     });
 
     // Revalidate all pages that show gamification data
@@ -76,15 +61,18 @@ export async function logActivity(params: LogActivityParams) {
 }
 
 export async function getLeaderboard(
-  metricKey: string
+  leaderboardKey: string,
+  city?: string
 ): Promise<TrophyApi.LeaderboardRanking[]> {
   if (!process.env.TROPHY_API_KEY) return [];
 
   try {
-    const response = await trophy.leaderboards.get(metricKey);
+    const response = await trophy.leaderboards.get(leaderboardKey, {
+      userAttributes: city ? `city:${city}` : undefined,
+    });
     return response.rankings || [];
   } catch (error) {
-    console.error(`Failed to fetch leaderboard for ${metricKey}:`, error);
+    console.error(`Failed to fetch leaderboard for ${leaderboardKey}:`, error);
     return [];
   }
 }
@@ -111,7 +99,7 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
     // Try to get points (may not be configured)
     let pointsResponse: TrophyApi.GetUserPointsResponse | null = null;
     try {
-      pointsResponse = await trophy.users.points(userId, "xp");
+      pointsResponse = await trophy.users.points(userId, "fitness-xp");
     } catch {
       // Points system might not be configured
     }

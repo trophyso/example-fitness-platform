@@ -1,9 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserStats } from "@/app/actions";
-import { Footprints, Bike, Waves, Award } from "lucide-react";
+import { Footprints, Bike, Waves, Settings } from "lucide-react";
+import { CitySetting } from "@/components/city-setting";
 
 export default async function ProfilePage() {
   const stats = await getUserStats("current_user");
@@ -19,12 +19,6 @@ export default async function ProfilePage() {
     const metric = stats?.metrics?.find((m) => m.key === key);
     return metric?.current ?? 0;
   };
-
-  // Split achievements into earned and locked
-  const earnedAchievements =
-    stats?.achievements?.filter((a) => a.achievedAt) ?? [];
-  const lockedAchievements =
-    stats?.achievements?.filter((a) => !a.achievedAt) ?? [];
 
   return (
     <div className="space-y-8">
@@ -102,159 +96,17 @@ export default async function ProfilePage() {
         </Card>
       </div>
 
-      {/* Badges & Achievements */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Award className="w-5 h-5" /> Achievements
-        </h2>
-
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="earned">
-              Earned ({earnedAchievements.length})
-            </TabsTrigger>
-            <TabsTrigger value="locked">
-              Locked ({lockedAchievements.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent
-            value="all"
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            {/* Earned Achievements */}
-            {earnedAchievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="group hover:scale-105 transition-transform duration-200 bg-primary/10 border-primary/30"
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                  {achievement.badgeUrl ? (
-                    <img
-                      src={achievement.badgeUrl}
-                      alt={achievement.name}
-                      className="w-12 h-12 filter drop-shadow-lg group-hover:animate-bounce"
-                    />
-                  ) : (
-                    <div className="text-4xl filter drop-shadow-lg group-hover:animate-bounce">
-                      🏆
-                    </div>
-                  )}
-                  <div>
-                    <div className="font-bold text-sm">{achievement.name}</div>
-                    {achievement.achievedAt && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Unlocked{" "}
-                        {new Date(achievement.achievedAt).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Locked Achievements */}
-            {lockedAchievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="opacity-50 grayscale border-dashed"
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                  <div className="text-4xl">🔒</div>
-                  <div>
-                    <div className="font-bold text-sm">{achievement.name}</div>
-                    {achievement.description && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {achievement.description}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Empty state */}
-            {earnedAchievements.length === 0 &&
-              lockedAchievements.length === 0 && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  No achievements available yet. Keep working out to earn badges!
-                </div>
-              )}
-          </TabsContent>
-
-          <TabsContent
-            value="earned"
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            {earnedAchievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="group hover:scale-105 transition-transform duration-200 bg-primary/10 border-primary/30"
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                  {achievement.badgeUrl ? (
-                    <img
-                      src={achievement.badgeUrl}
-                      alt={achievement.name}
-                      className="w-12 h-12 filter drop-shadow-lg group-hover:animate-bounce"
-                    />
-                  ) : (
-                    <div className="text-4xl filter drop-shadow-lg group-hover:animate-bounce">
-                      🏆
-                    </div>
-                  )}
-                  <div>
-                    <div className="font-bold text-sm">{achievement.name}</div>
-                    {achievement.achievedAt && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Unlocked{" "}
-                        {new Date(achievement.achievedAt).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {earnedAchievements.length === 0 && (
-              <div className="col-span-full text-center text-muted-foreground py-8">
-                No achievements earned yet. Keep working out!
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent
-            value="locked"
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            {lockedAchievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="opacity-50 grayscale border-dashed"
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                  <div className="text-4xl">🔒</div>
-                  <div>
-                    <div className="font-bold text-sm">{achievement.name}</div>
-                    {achievement.description && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {achievement.description}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {lockedAchievements.length === 0 && (
-              <div className="col-span-full text-center text-muted-foreground py-8">
-                All achievements unlocked! Congratulations! 🎉
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+      {/* Settings */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Settings className="w-5 h-5" /> Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CitySetting />
+        </CardContent>
+      </Card>
     </div>
   );
 }

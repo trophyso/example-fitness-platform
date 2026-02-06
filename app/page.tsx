@@ -38,7 +38,7 @@ export default async function Dashboard() {
         <div className="flex-1 mr-4">
           <div className="flex items-baseline justify-between mb-1">
             <span className="font-bold text-lg">
-              {stats?.points?.name ?? "Points"}
+              {stats?.points?.name ?? "XP"}
             </span>
             <span className="text-xs text-muted-foreground">
               {totalPoints.toLocaleString()} {maxPoints ? `/ ${maxPoints.toLocaleString()}` : ""} XP
@@ -48,13 +48,12 @@ export default async function Dashboard() {
         </div>
         <div className="flex flex-col items-center">
           <Flame
-            className={`w-8 h-8 ${
-              streakActive
-                ? "text-orange-500 fill-orange-500 animate-pulse"
-                : "text-muted-foreground"
-            }`}
+            className={`w-8 h-8 ${streakActive
+              ? "text-orange-500 fill-orange-500 animate-pulse"
+              : "text-muted-foreground"
+              }`}
           />
-          <span className="text-xs font-bold">{streakLength} Day Streak</span>
+          <span className="text-xs font-bold">{streakLength} Days</span>
         </div>
       </div>
 
