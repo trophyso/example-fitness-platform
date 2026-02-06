@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Footprints, Bike, Waves, Loader2 } from "lucide-react";
+import { Footprints, Bike, Waves, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/app/actions";
 import { ActivityType } from "@/lib/constants";
@@ -51,7 +52,6 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Get city from localStorage/timezone
     const city = getUserCity();
 
     startTransition(async () => {
@@ -77,52 +77,71 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const activityColors = {
+    run: "text-blue-500",
+    cycle: "text-emerald-500",
+    swim: "text-cyan-500",
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Log Activity</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="text-lg">Log Activity</DialogTitle>
+            <DialogDescription className="text-sm">
+              Record your workout to earn XP and climb the leaderboard.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as ActivityType)}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="run" className="gap-2">
-              <Footprints className="w-4 h-4" /> Run
-            </TabsTrigger>
-            <TabsTrigger value="cycle" className="gap-2">
-              <Bike className="w-4 h-4" /> Cycle
-            </TabsTrigger>
-            <TabsTrigger value="swim" className="gap-2">
-              <Waves className="w-4 h-4" /> Swim
-            </TabsTrigger>
-          </TabsList>
+          <div className="px-6 pt-4">
+            <TabsList className="grid w-full grid-cols-3 bg-secondary/50 p-1">
+              <TabsTrigger value="run" className="gap-2 text-sm data-[state=active]:shadow-soft">
+                <Footprints className="w-4 h-4" /> Run
+              </TabsTrigger>
+              <TabsTrigger value="cycle" className="gap-2 text-sm data-[state=active]:shadow-soft">
+                <Bike className="w-4 h-4" /> Cycle
+              </TabsTrigger>
+              <TabsTrigger value="swim" className="gap-2 text-sm data-[state=active]:shadow-soft">
+                <Waves className="w-4 h-4" /> Swim
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 pt-5 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="distance">
-                Distance ({activeTab === "swim" ? "meters" : "km"})
+              <Label htmlFor="distance" className="text-sm font-medium">
+                Distance
               </Label>
-              <Input
-                id="distance"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                value={distance}
-                onChange={(e) => setDistance(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="distance"
+                  type="number"
+                  step="0.1"
+                  placeholder="0.0"
+                  value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  required
+                  className="pr-12 h-12 text-lg font-medium"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                  {activeTab === "swim" ? "m" : "km"}
+                </div>
+              </div>
             </div>
 
             {activeTab === "run" && (
               <div className="space-y-2">
-                <Label>Pace</Label>
+                <Label className="text-sm font-medium">Pace</Label>
                 <Select value={pace} onValueChange={setPace}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-11">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -135,9 +154,9 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
 
             {activeTab === "swim" && (
               <div className="space-y-2">
-                <Label>Style</Label>
+                <Label className="text-sm font-medium">Style</Label>
                 <Select value={style} onValueChange={setStyle}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-11">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -148,9 +167,19 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
-            <Button type="submit" className="w-full mt-4" disabled={isPending}>
-              {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Workout
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-medium shadow-soft" 
+              disabled={isPending || !distance}
+            >
+              {isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Save Workout
+                </>
+              )}
             </Button>
           </form>
         </Tabs>

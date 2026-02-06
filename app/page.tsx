@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Flame, Trophy, Activity, Footprints, Bike, Waves } from "lucide-react";
+import { Flame, Trophy, Footprints, Bike, Waves, Zap, TrendingUp } from "lucide-react";
 import { getUserStats, getUserIdFromCookies } from "./actions";
 import { getLevelInfo } from "@/lib/constants";
 
 // Recent activities would come from a real activity log in production
 const recentActivities = [
-  { id: 1, type: "run", distance: 5.2, unit: "km", time: "Today, 8:00 AM", icon: Footprints },
-  { id: 2, type: "cycle", distance: 24.5, unit: "km", time: "Yesterday, 6:30 PM", icon: Bike },
-  { id: 3, type: "swim", distance: 1200, unit: "m", time: "Feb 4, 7:00 AM", icon: Waves },
+  { id: 1, type: "run", distance: 5.2, unit: "km", time: "Today, 8:00 AM", icon: Footprints, color: "text-blue-500" },
+  { id: 2, type: "cycle", distance: 24.5, unit: "km", time: "Yesterday, 6:30 PM", icon: Bike, color: "text-emerald-500" },
+  { id: 3, type: "swim", distance: 1200, unit: "m", time: "Feb 4, 7:00 AM", icon: Waves, color: "text-cyan-500" },
 ];
 
 export default async function Dashboard() {
@@ -33,83 +33,89 @@ export default async function Dashboard() {
   const nextAchievement = stats?.achievements?.find((a) => !a.achievedAt);
 
   return (
-    <div className="space-y-6">
-      {/* Header Stats */}
-      <div className="flex items-center justify-between">
-        <div className="flex-1 mr-4">
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="font-bold text-lg">
-              Level {levelInfo.currentLevel.level}{" "}
-              <span className="text-primary">{levelInfo.currentLevel.name}</span>
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {totalXP.toLocaleString()} XP
-              {levelInfo.nextLevel && (
-                <> / {levelInfo.nextLevel.xpThreshold.toLocaleString()} XP</>
-              )}
-            </span>
-          </div>
-          <Progress value={levelInfo.progressToNextLevel} className="h-2 bg-secondary" />
-          {levelInfo.nextLevel && (
-            <div className="text-xs text-muted-foreground mt-1">
-              {levelInfo.xpRequiredForNextLevel - levelInfo.xpInCurrentLevel} XP to{" "}
-              {levelInfo.nextLevel.name}
+    <div className="space-y-8">
+      {/* Level & Streak Header */}
+      <div className="flex items-start gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-soft">
+              <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-          )}
+            <div>
+              <div className="text-sm text-muted-foreground">Level {levelInfo.currentLevel.level}</div>
+              <div className="font-semibold text-lg leading-tight">{levelInfo.currentLevel.name}</div>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Progress value={levelInfo.progressToNextLevel} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{totalXP.toLocaleString()} XP</span>
+              {levelInfo.nextLevel && (
+                <span>{levelInfo.xpRequiredForNextLevel - levelInfo.xpInCurrentLevel} XP to {levelInfo.nextLevel.name}</span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col items-center">
+        
+        <div className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-100 dark:border-orange-900/30">
           <Flame
-            className={`w-8 h-8 ${streakActive
-                ? "text-orange-500 fill-orange-500 animate-pulse"
+            className={`w-7 h-7 ${
+              streakActive
+                ? "text-orange-500 fill-orange-500"
                 : "text-muted-foreground"
-              }`}
+            }`}
           />
-          <span className="text-xs font-bold">{streakLength} Days</span>
+          <span className="text-lg font-bold text-orange-600 dark:text-orange-400">{streakLength}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">day streak</span>
         </div>
       </div>
 
-      {/* Main Card: Activity Summary */}
-      <Card className="bg-gradient-to-br from-card to-secondary/50 border-none shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg">Your Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-400">
-                {getMetricTotal("distance_run").toFixed(1)}
-              </div>
-              <div className="text-xs text-muted-foreground">Run (km)</div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="shadow-soft border-0 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-950/40 dark:to-blue-950/20">
+          <CardContent className="p-4 text-center">
+            <Footprints className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {getMetricTotal("distance_run").toFixed(1)}
             </div>
-            <div>
-              <div className="text-2xl font-bold text-green-400">
-                {getMetricTotal("distance_cycled").toFixed(1)}
-              </div>
-              <div className="text-xs text-muted-foreground">Cycle (km)</div>
+            <div className="text-xs text-muted-foreground">km run</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-soft border-0 bg-gradient-to-br from-emerald-50 to-emerald-50/50 dark:from-emerald-950/40 dark:to-emerald-950/20">
+          <CardContent className="p-4 text-center">
+            <Bike className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {getMetricTotal("distance_cycled").toFixed(1)}
             </div>
-            <div>
-              <div className="text-2xl font-bold text-cyan-400">
-                {getMetricTotal("distance_swum").toFixed(0)}
-              </div>
-              <div className="text-xs text-muted-foreground">Swim (m)</div>
+            <div className="text-xs text-muted-foreground">km cycled</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-soft border-0 bg-gradient-to-br from-cyan-50 to-cyan-50/50 dark:from-cyan-950/40 dark:to-cyan-950/20">
+          <CardContent className="p-4 text-center">
+            <Waves className="w-5 h-5 text-cyan-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+              {getMetricTotal("distance_swum").toFixed(0)}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="text-xs text-muted-foreground">m swum</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Next Badge Teaser */}
       {nextAchievement && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="flex items-center gap-4">
-            <div className="bg-primary/20 p-3 rounded-full">
+        <Card className="shadow-soft border-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 overflow-hidden relative">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+          <CardContent className="p-5 flex items-center gap-4 relative">
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
               <Trophy className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <h4 className="font-semibold text-sm">
-                Next Badge: {nextAchievement.name}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-primary uppercase tracking-wide mb-0.5">Next Badge</div>
+              <h4 className="font-semibold truncate">
+                {nextAchievement.name}
               </h4>
               {nextAchievement.description && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground truncate">
                   {nextAchievement.description}
                 </p>
               )}
@@ -119,31 +125,34 @@ export default async function Dashboard() {
       )}
 
       {/* Recent Activity */}
-      <div>
-        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-          <Activity className="w-4 h-4" /> Recent Activity
-        </h3>
-        <div className="space-y-3">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-base flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-muted-foreground" /> 
+            Recent Activity
+          </h3>
+        </div>
+        <div className="space-y-2">
           {recentActivities.map((activity) => {
             const Icon = activity.icon;
             return (
               <div
                 key={activity.id}
-                className="flex items-center justify-between p-4 bg-card rounded-xl border border-border/50"
+                className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/40 shadow-soft hover:shadow-soft-lg transition-shadow"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg bg-secondary`}>
-                    <Icon className="w-5 h-5 text-foreground" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/80 flex items-center justify-center">
+                    <Icon className={`w-5 h-5 ${activity.color}`} />
                   </div>
                   <div>
-                    <div className="font-medium capitalize">{activity.type}</div>
+                    <div className="font-medium capitalize text-sm">{activity.type}</div>
                     <div className="text-xs text-muted-foreground">
                       {activity.time}
                     </div>
                   </div>
                 </div>
-                <div className="font-bold text-right">
-                  {activity.distance}
+                <div className="text-right">
+                  <span className="font-semibold">{activity.distance}</span>
                   <span className="text-xs text-muted-foreground ml-1">
                     {activity.unit}
                   </span>

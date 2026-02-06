@@ -1,16 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Footprints, Bike, Waves, Globe, MapPin } from "lucide-react";
+import { Trophy, Footprints, Bike, Waves, Globe, MapPin, Medal, Users } from "lucide-react";
 import { getLeaderboard } from "@/app/actions";
 import { LEADERBOARD_KEYS } from "@/lib/constants";
 import { getUserCity } from "@/lib/city";
 import { TrophyApi } from "@trophyso/node";
 
 type LeaderboardScope = "global" | "city";
+
+const rankStyles = {
+  1: {
+    bg: "bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/40 dark:to-yellow-950/30",
+    border: "border-amber-200 dark:border-amber-800/50",
+    rank: "bg-gradient-to-br from-amber-400 to-yellow-500 text-white",
+    icon: "text-amber-500",
+  },
+  2: {
+    bg: "bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-950/40 dark:to-gray-950/30",
+    border: "border-slate-200 dark:border-slate-700/50",
+    rank: "bg-gradient-to-br from-slate-400 to-gray-400 text-white",
+    icon: "text-slate-400",
+  },
+  3: {
+    bg: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/30",
+    border: "border-orange-200 dark:border-orange-800/50",
+    rank: "bg-gradient-to-br from-orange-400 to-amber-500 text-white",
+    icon: "text-orange-500",
+  },
+};
 
 function LeaderboardList({
   data,
@@ -23,18 +43,18 @@ function LeaderboardList({
 }) {
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="flex items-center gap-4 p-4 rounded-xl border bg-card border-border/50 animate-pulse"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-card shadow-soft animate-pulse"
           >
-            <div className="w-8 h-6 bg-muted rounded" />
-            <div className="h-10 w-10 bg-muted rounded-full" />
-            <div className="flex-1">
-              <div className="h-4 w-32 bg-muted rounded" />
+            <div className="w-9 h-9 bg-muted rounded-xl" />
+            <div className="h-11 w-11 bg-muted rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-28 bg-muted rounded" />
             </div>
-            <div className="h-6 w-16 bg-muted rounded" />
+            <div className="h-5 w-16 bg-muted rounded" />
           </div>
         ))}
       </div>
@@ -43,46 +63,59 @@ function LeaderboardList({
 
   if (data.length === 0) {
     return (
-      <div className="text-center text-muted-foreground py-8">
-        No rankings yet. Be the first to log an activity!
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+          <Users className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <p className="text-muted-foreground text-sm">No rankings yet. Be the first to log an activity!</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {data.map((entry, index) => {
         const displayName =
           entry.userName || `User ${entry.userId.slice(0, 8)}`;
         const initials = displayName.slice(0, 2).toUpperCase();
+        const isTopThree = index < 3;
+        const style = rankStyles[(index + 1) as 1 | 2 | 3];
 
         return (
           <div
             key={entry.userId}
-            className={`flex items-center gap-4 p-4 rounded-xl border ${
-              index < 3
-                ? "bg-gradient-to-r from-card to-secondary/20 border-primary/20"
-                : "bg-card border-border/50"
+            className={`flex items-center gap-3 p-3 rounded-2xl shadow-soft transition-all hover:shadow-soft-lg ${
+              isTopThree
+                ? `${style.bg} ${style.border} border`
+                : "bg-card border border-border/40"
             }`}
           >
-            <div className="flex-none w-8 font-bold text-center text-lg text-muted-foreground">
+            <div
+              className={`flex-none w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold ${
+                isTopThree
+                  ? style.rank
+                  : "bg-secondary text-muted-foreground"
+              }`}
+            >
               {entry.rank}
             </div>
-            <Avatar className="h-10 w-10 border-2 border-background">
-              <AvatarFallback>{initials}</AvatarFallback>
+            <Avatar className={`h-11 w-11 border-2 ${isTopThree ? "border-white shadow-soft" : "border-background"}`}>
+              <AvatarFallback className={`text-sm font-semibold ${isTopThree ? "bg-white/80" : ""}`}>
+                {initials}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="font-semibold">{displayName}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm truncate">{displayName}</div>
             </div>
-            <div className="font-bold text-lg">
-              {entry.value.toLocaleString()}
-              <span className="text-sm font-normal text-muted-foreground ml-1">
-                {unit}
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <span className="font-bold">{entry.value.toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground ml-1">{unit}</span>
+              </div>
+              {isTopThree && (
+                <Medal className={`w-5 h-5 ${style.icon}`} />
+              )}
             </div>
-            {index === 0 && <Trophy className="w-5 h-5 text-yellow-500" />}
-            {index === 1 && <Trophy className="w-5 h-5 text-gray-400" />}
-            {index === 2 && <Trophy className="w-5 h-5 text-amber-600" />}
           </div>
         );
       })}
@@ -93,13 +126,13 @@ function LeaderboardList({
 export default function LeaderboardsPage() {
   const [scope, setScope] = useState<LeaderboardScope>("global");
   const [activeTab, setActiveTab] = useState<"run" | "cycle" | "swim">("run");
-  const [city, setCity] = useState<string>("");
   const [data, setData] = useState<TrophyApi.LeaderboardRanking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get city on mount
-  useEffect(() => {
-    setCity(getUserCity());
+  // Get city on client side (computed once on mount)
+  const city = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return getUserCity();
   }, []);
 
   // Fetch leaderboard data when scope, tab, or city changes
@@ -111,7 +144,6 @@ export default function LeaderboardsPage() {
       let cityParam: string | undefined;
 
       if (scope === "city" && city) {
-        // Use city leaderboards
         switch (activeTab) {
           case "run":
             leaderboardKey = LEADERBOARD_KEYS.runCities;
@@ -125,7 +157,6 @@ export default function LeaderboardsPage() {
         }
         cityParam = city;
       } else {
-        // Use global leaderboards
         switch (activeTab) {
           case "run":
             leaderboardKey = LEADERBOARD_KEYS.run;
@@ -149,22 +180,33 @@ export default function LeaderboardsPage() {
 
   const getUnit = () => (activeTab === "swim" ? "m" : "km");
 
+  const activityLabels = {
+    run: "Running",
+    cycle: "Cycling", 
+    swim: "Swimming",
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-primary" /> Leaderboards
-        </h1>
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Trophy className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold">Leaderboards</h1>
+          <p className="text-sm text-muted-foreground">Weekly rankings</p>
+        </div>
       </div>
 
       {/* Scope Toggle */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 p-1 bg-secondary/50 rounded-xl w-fit">
         <button
           onClick={() => setScope("global")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
             scope === "global"
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              ? "bg-white dark:bg-card shadow-soft text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <Globe className="w-4 h-4" />
@@ -172,10 +214,10 @@ export default function LeaderboardsPage() {
         </button>
         <button
           onClick={() => setScope("city")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
             scope === "city"
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              ? "bg-white dark:bg-card shadow-soft text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <MapPin className="w-4 h-4" />
@@ -188,85 +230,37 @@ export default function LeaderboardsPage() {
         onValueChange={(v) => setActiveTab(v as "run" | "cycle" | "swim")}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="run" className="gap-2">
+        <TabsList className="grid w-full grid-cols-3 mb-6 bg-secondary/50 p-1">
+          <TabsTrigger value="run" className="gap-2 text-sm">
             <Footprints className="w-4 h-4" /> Run
           </TabsTrigger>
-          <TabsTrigger value="cycle" className="gap-2">
+          <TabsTrigger value="cycle" className="gap-2 text-sm">
             <Bike className="w-4 h-4" /> Cycle
           </TabsTrigger>
-          <TabsTrigger value="swim" className="gap-2">
+          <TabsTrigger value="swim" className="gap-2 text-sm">
             <Waves className="w-4 h-4" /> Swim
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="run">
-          <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">
-                Weekly Distance Run
-                {scope === "city" && city && (
-                  <span className="text-muted-foreground font-normal">
-                    {" "}
-                    in {city}
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              <LeaderboardList
-                data={data}
-                unit={getUnit()}
-                isLoading={isLoading}
-              />
-            </CardContent>
-          </Card>
+        <div className="mb-4">
+          <h2 className="text-base font-semibold">
+            Weekly {activityLabels[activeTab]}
+            {scope === "city" && city && (
+              <span className="text-muted-foreground font-normal"> in {city}</span>
+            )}
+          </h2>
+        </div>
+
+        <TabsContent value="run" className="mt-0">
+          <LeaderboardList data={data} unit={getUnit()} isLoading={isLoading} />
         </TabsContent>
 
-        <TabsContent value="cycle">
-          <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">
-                Weekly Distance Cycled
-                {scope === "city" && city && (
-                  <span className="text-muted-foreground font-normal">
-                    {" "}
-                    in {city}
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              <LeaderboardList
-                data={data}
-                unit={getUnit()}
-                isLoading={isLoading}
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="cycle" className="mt-0">
+          <LeaderboardList data={data} unit={getUnit()} isLoading={isLoading} />
         </TabsContent>
 
-        <TabsContent value="swim">
-          <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg">
-                Weekly Distance Swum
-                {scope === "city" && city && (
-                  <span className="text-muted-foreground font-normal">
-                    {" "}
-                    in {city}
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              <LeaderboardList
-                data={data}
-                unit={getUnit()}
-                isLoading={isLoading}
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="swim" className="mt-0">
+          <LeaderboardList data={data} unit={getUnit()} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
     </div>
