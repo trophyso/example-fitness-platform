@@ -75,12 +75,14 @@ export async function logActivity(params: LogActivityParams) {
     const response = await trophy.metrics.event(metricKey, {
       user: {
         id: userId,
-        attributes:
-          Object.keys(userAttributes).length > 0 ? userAttributes : undefined,
+        ...(Object.keys(userAttributes).length > 0
+          ? { attributes: userAttributes }
+          : {}),
       },
       value: distance,
-      attributes:
-        Object.keys(eventAttributes).length > 0 ? eventAttributes : undefined,
+      ...(Object.keys(eventAttributes).length > 0
+        ? { attributes: eventAttributes }
+        : {}),
     });
 
     // Revalidate all pages that show gamification data

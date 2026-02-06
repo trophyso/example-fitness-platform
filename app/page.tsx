@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Flame, Trophy, Activity, Footprints, Bike, Waves } from "lucide-react";
 import { getUserStats, getUserIdFromCookies } from "./actions";
+import { getLevelInfo } from "@/lib/constants";
 
 // Recent activities would come from a real activity log in production
 const recentActivities = [
@@ -18,10 +19,9 @@ export default async function Dashboard() {
   const streakLength = stats?.streak?.length ?? 0;
   const streakActive = streakLength > 0;
 
-  // Calculate points/XP info
-  const totalPoints = stats?.points?.total ?? 0;
-  const maxPoints = stats?.points?.maxPoints ?? 1000;
-  const progressPercent = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
+  // Calculate points/XP and level info
+  const totalXP = stats?.points?.total ?? 0;
+  const levelInfo = getLevelInfo(totalXP);
 
   // Get metric totals for today's activity display
   const getMetricTotal = (key: string) => {
@@ -39,19 +39,29 @@ export default async function Dashboard() {
         <div className="flex-1 mr-4">
           <div className="flex items-baseline justify-between mb-1">
             <span className="font-bold text-lg">
-              {stats?.points?.name ?? "XP"}
+              Level {levelInfo.currentLevel.level}{" "}
+              <span className="text-primary">{levelInfo.currentLevel.name}</span>
             </span>
             <span className="text-xs text-muted-foreground">
-              {totalPoints.toLocaleString()} {maxPoints ? `/ ${maxPoints.toLocaleString()}` : ""} XP
+              {totalXP.toLocaleString()} XP
+              {levelInfo.nextLevel && (
+                <> / {levelInfo.nextLevel.xpThreshold.toLocaleString()} XP</>
+              )}
             </span>
           </div>
-          <Progress value={progressPercent} className="h-2 bg-secondary" />
+          <Progress value={levelInfo.progressToNextLevel} className="h-2 bg-secondary" />
+          {levelInfo.nextLevel && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {levelInfo.xpRequiredForNextLevel - levelInfo.xpInCurrentLevel} XP to{" "}
+              {levelInfo.nextLevel.name}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-center">
           <Flame
             className={`w-8 h-8 ${streakActive
-              ? "text-orange-500 fill-orange-500 animate-pulse"
-              : "text-muted-foreground"
+                ? "text-orange-500 fill-orange-500 animate-pulse"
+                : "text-muted-foreground"
               }`}
           />
           <span className="text-xs font-bold">{streakLength} Days</span>
@@ -90,7 +100,7 @@ export default async function Dashboard() {
       {/* Next Badge Teaser */}
       {nextAchievement && (
         <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4 flex items-center gap-4">
+          <CardContent className="flex items-center gap-4">
             <div className="bg-primary/20 p-3 rounded-full">
               <Trophy className="w-6 h-6 text-primary" />
             </div>
