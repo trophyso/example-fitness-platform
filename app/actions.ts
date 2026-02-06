@@ -1,9 +1,13 @@
 "use server";
 
-import { Trophy } from "@trophyso/node";
+import { TrophyApiClient } from "@trophyso/node";
 import { revalidatePath } from "next/cache";
 
-const trophy = new Trophy(process.env.TROPHY_API_KEY as string);
+// Initialize Trophy SDK
+// In a real app, ensure TROPHY_API_KEY is set in .env.local
+const trophy = new TrophyApiClient({
+  apiKey: process.env.TROPHY_API_KEY as string,
+});
 
 export type ActivityType = "run" | "cycle" | "swim";
 
@@ -19,88 +23,103 @@ interface LogActivityParams {
 export async function logActivity(params: LogActivityParams) {
   if (!process.env.TROPHY_API_KEY) {
     console.warn("Missing TROPHY_API_KEY");
-    return { success: false, error: "Configuration Error" };
+    // Return mock success for demo purposes if no key
+    // return { success: true, mock: true };
   }
 
   const { type, distance, city, pace, style, userId } = params;
 
   let metricKey = "";
-  let value = distance;
-  const attributes: Record<string, any> = { city: city || "London" };
+  // Ensure we use the correct metric keys from our Spec
+  const attributes: Record<string, string> = {};
+
+  if (city) attributes.city = city;
 
   switch (type) {
     case "run":
       metricKey = "distance_run";
-      attributes.pace = pace || "run";
+      if (pace) attributes.pace = pace;
       break;
     case "cycle":
       metricKey = "distance_cycled";
       break;
     case "swim":
       metricKey = "distance_swum";
-      attributes.style = style || "freestyle";
+      if (style) attributes.style = style;
       break;
   }
 
   try {
-    // 1. Send Event to Trophy
-    // Using the 'event' or 'metric' endpoint depending on SDK. 
-    // Assuming trophy.events.create or similar based on typical patterns.
-    // If exact method is unknown, I'll use a generic wrapper pattern or guess.
-    // Looking at typical analytics SDKs: trophy.track(...) or trophy.metrics.log(...)
-    
-    // Let's assume `trophy.events.trigger` or `trophy.metrics.add`.
-    // Given the lack of docs, I will use a placeholder comment and a likely method.
-    // If the user provided `@trophyso/node`, it likely has `achievements`, `leaderboards` etc.
-    
-    // For now, I'll simulate the call structure:
-    await trophy.events.trigger({
-      userId,
-      name: metricKey,
-      value: value,
-      metadata: attributes,
+    const response = await trophy.metrics.event(metricKey, {
+      user: {
+        id: userId,
+        // In a real app, you might send email/name here if it's the first time
+        // email: "user@example.com", 
+      },
+      value: distance,
+      attributes: attributes,
     });
 
-    // 2. Revalidate paths to update UI
+    // Revalidate all pages that show gamification data
     revalidatePath("/");
     revalidatePath("/leaderboards");
     revalidatePath("/profile");
 
-    return { success: true };
+    return { success: true, data: response };
   } catch (error) {
     console.error("Failed to log activity:", error);
     return { success: false, error: "Failed to log activity" };
   }
 }
 
-export async function getLeaderboard(metric: string, period: "weekly" | "all_time" = "weekly") {
-  // Placeholder for fetching leaderboard
-  // return await trophy.leaderboards.list({ metric, period });
-  return [
-    { rank: 1, userId: "user_1", value: 120, user: { name: "Alice", avatar: "" } },
-    { rank: 2, userId: "user_2", value: 95, user: { name: "Bob", avatar: "" } },
-    { rank: 3, userId: "user_3", value: 80, user: { name: "Charlie", avatar: "" } },
-  ];
+export async function getLeaderboard(metricKey: string) {
+  if (!process.env.TROPHY_API_KEY) return [];
+
+  try {
+    // Fetch global leaderboard for the metric
+    const response = await trophy.leaderboards.get(metricKey);
+    return response.rankings || [];
+  } catch (error) {
+    console.error(`Failed to fetch leaderboard for ${metricKey}:`, error);
+    return [];
+  }
 }
 
 export async function getUserStats(userId: string) {
-  // Placeholder for fetching user profile/stats
-  // const user = await trophy.users.get(userId);
-  // const achievements = await trophy.users.achievements(userId);
-  
-  return {
-    level: 4,
-    xp: 650,
-    nextLevelXp: 1000,
-    streak: 5,
-    streakActive: true,
-    stats: {
-      run: 145,
-      cycle: 450,
-      swim: 2000,
-    },
-    recentBadges: [
-      { id: "marathoner", name: "Marathoner", icon: "🏃‍♂️", unlockedAt: "2025-01-15" },
-    ],
-  };
+  if (!process.env.TROPHY_API_KEY) {
+    // Return mock data so the UI doesn't crash during development without API key
+    return {
+      streak: { length: 0, active: false },
+      achievements: [],
+      xp: 0,
+      level: 1,
+    };
+  }
+
+  try {
+    // 1. Get Streak
+    const streak = await trophy.users.streak(userId);
+    
+    // 2. Get Achievements
+    const achievements = await trophy.users.achievements(userId);
+
+    // 3. Get Points/Level (Using the default 'points' system key usually, or custom if defined)
+    // Assuming a global 'xp' system or similar. For now, we'll try to get points.
+    // If 'points' isn't set up, this might fail, so handle gracefully.
+    let pointsResponse = null;
+    try {
+        pointsResponse = await trophy.users.points(userId, "xp"); // Assuming key is 'xp' per spec concept
+    } catch (e) {
+        // Points might not be configured yet
+    }
+
+    return {
+      streak: streak,
+      achievements: achievements,
+      points: pointsResponse,
+    };
+  } catch (error) {
+    console.error("Failed to fetch user stats:", error);
+    return null;
+  }
 }
