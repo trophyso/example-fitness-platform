@@ -1,12 +1,30 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserStats } from "@/app/actions";
-import { Trophy, Footprints, Bike, Waves, Flame, Award } from "lucide-react";
+import { Footprints, Bike, Waves, Award } from "lucide-react";
 
 export default async function ProfilePage() {
   const stats = await getUserStats("current_user");
+
+  // Calculate points/XP info
+  const totalPoints = stats?.points?.total ?? 0;
+  const maxPoints = stats?.points?.maxPoints ?? 1000;
+  const progressPercent = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
+  const pointsToNext = maxPoints - totalPoints;
+
+  // Get metric totals
+  const getMetricTotal = (key: string) => {
+    const metric = stats?.metrics?.find((m) => m.key === key);
+    return metric?.current ?? 0;
+  };
+
+  // Split achievements into earned and locked
+  const earnedAchievements =
+    stats?.achievements?.filter((a) => a.achievedAt) ?? [];
+  const lockedAchievements =
+    stats?.achievements?.filter((a) => !a.achievedAt) ?? [];
 
   return (
     <div className="space-y-8">
@@ -14,29 +32,37 @@ export default async function ProfilePage() {
       <div className="flex flex-col items-center justify-center space-y-4">
         <div className="relative">
           <Avatar className="h-24 w-24 border-4 border-card shadow-xl">
-            <AvatarImage src="/placeholder-avatar.jpg" />
+            <AvatarImage src="" />
             <AvatarFallback className="text-2xl">ME</AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-bold border-2 border-background">
-            Lvl {stats.level}
-          </div>
+          {stats?.points && (
+            <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-bold border-2 border-background">
+              {totalPoints.toLocaleString()} XP
+            </div>
+          )}
         </div>
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold">John Doe</h1>
-          <p className="text-muted-foreground text-sm">Member since 2026</p>
-        </div>
-        
-        {/* XP Bar */}
-        <div className="w-full max-w-sm space-y-2">
-          <div className="flex justify-between text-xs font-medium text-muted-foreground">
-            <span>{stats.xp} XP</span>
-            <span>{stats.nextLevelXp} XP</span>
-          </div>
-          <Progress value={(stats.xp / stats.nextLevelXp) * 100} className="h-3" />
-          <p className="text-center text-xs text-muted-foreground">
-            {(stats.nextLevelXp - stats.xp)} XP to Level {stats.level + 1}
+          <h1 className="text-2xl font-bold">Athlete Profile</h1>
+          <p className="text-muted-foreground text-sm">
+            {stats?.streak?.length ?? 0} day streak
           </p>
         </div>
+
+        {/* XP Bar */}
+        {stats?.points && (
+          <div className="w-full max-w-sm space-y-2">
+            <div className="flex justify-between text-xs font-medium text-muted-foreground">
+              <span>{totalPoints.toLocaleString()} XP</span>
+              {maxPoints && <span>{maxPoints.toLocaleString()} XP</span>}
+            </div>
+            <Progress value={progressPercent} className="h-3" />
+            {maxPoints && pointsToNext > 0 && (
+              <p className="text-center text-xs text-muted-foreground">
+                {pointsToNext.toLocaleString()} XP to go
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -45,7 +71,9 @@ export default async function ProfilePage() {
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <Footprints className="w-6 h-6 text-blue-500" />
             <div>
-              <div className="text-xl font-bold">{stats.stats.run}</div>
+              <div className="text-xl font-bold">
+                {getMetricTotal("distance_run").toFixed(1)}
+              </div>
               <div className="text-xs text-muted-foreground">Run (km)</div>
             </div>
           </CardContent>
@@ -54,7 +82,9 @@ export default async function ProfilePage() {
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <Bike className="w-6 h-6 text-green-500" />
             <div>
-              <div className="text-xl font-bold">{stats.stats.cycle}</div>
+              <div className="text-xl font-bold">
+                {getMetricTotal("distance_cycled").toFixed(1)}
+              </div>
               <div className="text-xs text-muted-foreground">Cycle (km)</div>
             </div>
           </CardContent>
@@ -63,7 +93,9 @@ export default async function ProfilePage() {
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <Waves className="w-6 h-6 text-cyan-500" />
             <div>
-              <div className="text-xl font-bold">{stats.stats.swim}</div>
+              <div className="text-xl font-bold">
+                {getMetricTotal("distance_swum").toFixed(0)}
+              </div>
               <div className="text-xs text-muted-foreground">Swim (m)</div>
             </div>
           </CardContent>
@@ -75,42 +107,151 @@ export default async function ProfilePage() {
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Award className="w-5 h-5" /> Achievements
         </h2>
-        
+
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="earned">Earned</TabsTrigger>
-            <TabsTrigger value="locked">Locked</TabsTrigger>
+            <TabsTrigger value="earned">
+              Earned ({earnedAchievements.length})
+            </TabsTrigger>
+            <TabsTrigger value="locked">
+              Locked ({lockedAchievements.length})
+            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="all" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-             {/* Mock Badges */}
-             {stats.recentBadges.map((badge) => (
-               <Card key={badge.id} className="group hover:scale-105 transition-transform duration-200 bg-primary/10 border-primary/30">
-                 <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                   <div className="text-4xl filter drop-shadow-lg group-hover:animate-bounce">
-                     {badge.icon}
-                   </div>
-                   <div>
-                     <div className="font-bold text-sm">{badge.name}</div>
-                     <div className="text-xs text-muted-foreground mt-1">Unlocked {badge.unlockedAt}</div>
-                   </div>
-                 </CardContent>
-               </Card>
-             ))}
-             
-             {/* Locked Badges */}
-             {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="opacity-50 grayscale border-dashed">
-                  <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
-                    <div className="text-4xl">🔒</div>
-                    <div>
-                      <div className="font-bold text-sm">Locked Badge</div>
-                      <div className="text-xs text-muted-foreground mt-1">???</div>
+
+          <TabsContent
+            value="all"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            {/* Earned Achievements */}
+            {earnedAchievements.map((achievement) => (
+              <Card
+                key={achievement.id}
+                className="group hover:scale-105 transition-transform duration-200 bg-primary/10 border-primary/30"
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                  {achievement.badgeUrl ? (
+                    <img
+                      src={achievement.badgeUrl}
+                      alt={achievement.name}
+                      className="w-12 h-12 filter drop-shadow-lg group-hover:animate-bounce"
+                    />
+                  ) : (
+                    <div className="text-4xl filter drop-shadow-lg group-hover:animate-bounce">
+                      🏆
                     </div>
-                  </CardContent>
-                </Card>
-             ))}
+                  )}
+                  <div>
+                    <div className="font-bold text-sm">{achievement.name}</div>
+                    {achievement.achievedAt && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Unlocked{" "}
+                        {new Date(achievement.achievedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Locked Achievements */}
+            {lockedAchievements.map((achievement) => (
+              <Card
+                key={achievement.id}
+                className="opacity-50 grayscale border-dashed"
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                  <div className="text-4xl">🔒</div>
+                  <div>
+                    <div className="font-bold text-sm">{achievement.name}</div>
+                    {achievement.description && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {achievement.description}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Empty state */}
+            {earnedAchievements.length === 0 &&
+              lockedAchievements.length === 0 && (
+                <div className="col-span-full text-center text-muted-foreground py-8">
+                  No achievements available yet. Keep working out to earn badges!
+                </div>
+              )}
+          </TabsContent>
+
+          <TabsContent
+            value="earned"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            {earnedAchievements.map((achievement) => (
+              <Card
+                key={achievement.id}
+                className="group hover:scale-105 transition-transform duration-200 bg-primary/10 border-primary/30"
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                  {achievement.badgeUrl ? (
+                    <img
+                      src={achievement.badgeUrl}
+                      alt={achievement.name}
+                      className="w-12 h-12 filter drop-shadow-lg group-hover:animate-bounce"
+                    />
+                  ) : (
+                    <div className="text-4xl filter drop-shadow-lg group-hover:animate-bounce">
+                      🏆
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-bold text-sm">{achievement.name}</div>
+                    {achievement.achievedAt && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Unlocked{" "}
+                        {new Date(achievement.achievedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {earnedAchievements.length === 0 && (
+              <div className="col-span-full text-center text-muted-foreground py-8">
+                No achievements earned yet. Keep working out!
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="locked"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            {lockedAchievements.map((achievement) => (
+              <Card
+                key={achievement.id}
+                className="opacity-50 grayscale border-dashed"
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                  <div className="text-4xl">🔒</div>
+                  <div>
+                    <div className="font-bold text-sm">{achievement.name}</div>
+                    {achievement.description && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {achievement.description}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {lockedAchievements.length === 0 && (
+              <div className="col-span-full text-center text-muted-foreground py-8">
+                All achievements unlocked! Congratulations! 🎉
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

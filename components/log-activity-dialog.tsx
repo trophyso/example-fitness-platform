@@ -32,7 +32,7 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
 
     startTransition(async () => {
       const result = await logActivity({
-        userId: "current_user", // Mock
+        userId: "current_user",
         type: activeTab,
         distance: distNum,
         city,
