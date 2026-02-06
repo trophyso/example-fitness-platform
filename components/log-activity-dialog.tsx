@@ -24,8 +24,10 @@ import { toast } from "sonner";
 import { logActivity } from "@/app/actions";
 import { ActivityType } from "@/lib/constants";
 import { getUserCity } from "@/lib/city";
+import { useUser } from "@/components/user-provider";
 
 export function LogActivityDialog({ children }: { children: React.ReactNode }) {
+  const { userId } = useUser();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<ActivityType>("run");
@@ -37,6 +39,12 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!userId) {
+      toast.error("User not initialized");
+      return;
+    }
+
     const distNum = parseFloat(distance);
     if (!distNum || distNum <= 0) {
       toast.error("Please enter a valid distance");
@@ -48,7 +56,7 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
 
     startTransition(async () => {
       const result = await logActivity({
-        userId: "current_user",
+        userId,
         type: activeTab,
         distance: distNum,
         city,

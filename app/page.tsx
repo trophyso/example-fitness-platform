@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Flame, Trophy, Activity, Footprints, Bike, Waves } from "lucide-react";
-import { getUserStats } from "./actions";
+import { getUserStats, getUserIdFromCookies } from "./actions";
 
 // Recent activities would come from a real activity log in production
 const recentActivities = [
@@ -11,7 +11,8 @@ const recentActivities = [
 ];
 
 export default async function Dashboard() {
-  const stats = await getUserStats("current_user");
+  const userId = await getUserIdFromCookies();
+  const stats = await getUserStats(userId ?? "");
 
   // Calculate streak info
   const streakLength = stats?.streak?.length ?? 0;

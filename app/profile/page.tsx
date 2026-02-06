@@ -1,12 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getUserStats } from "@/app/actions";
+import { getUserStats, getUserIdFromCookies } from "@/app/actions";
 import { Footprints, Bike, Waves, Settings } from "lucide-react";
 import { CitySetting } from "@/components/city-setting";
 
 export default async function ProfilePage() {
-  const stats = await getUserStats("current_user");
+  const userId = await getUserIdFromCookies();
+  const stats = await getUserStats(userId ?? "");
 
   // Calculate points/XP info
   const totalPoints = stats?.points?.total ?? 0;

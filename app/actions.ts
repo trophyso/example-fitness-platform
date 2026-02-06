@@ -9,6 +9,39 @@ const trophy = new TrophyApiClient({
   apiKey: process.env.TROPHY_API_KEY as string,
 });
 
+export async function identifyUser(userId: string, name?: string, tz?: string) {
+  if (!process.env.TROPHY_API_KEY) {
+    return { success: false, error: "API key not configured" };
+  }
+
+  try {
+    const user = await trophy.users.identify(userId, {
+      name,
+      tz,
+    });
+    return { success: true, user };
+  } catch (error) {
+    console.error("Failed to identify user:", error);
+    return { success: false, error: "Failed to identify user" };
+  }
+}
+
+export async function updateUserCity(userId: string, city: string) {
+  if (!process.env.TROPHY_API_KEY) {
+    return { success: false, error: "API key not configured" };
+  }
+
+  try {
+    const user = await trophy.users.update(userId, {
+      attributes: { city },
+    });
+    return { success: true, user };
+  } catch (error) {
+    console.error("Failed to update user city:", error);
+    return { success: false, error: "Failed to update user city" };
+  }
+}
+
 export async function logActivity(params: LogActivityParams) {
   if (!process.env.TROPHY_API_KEY) {
     console.warn("Missing TROPHY_API_KEY");
@@ -42,10 +75,12 @@ export async function logActivity(params: LogActivityParams) {
     const response = await trophy.metrics.event(metricKey, {
       user: {
         id: userId,
-        attributes: Object.keys(userAttributes).length > 0 ? userAttributes : undefined,
+        attributes:
+          Object.keys(userAttributes).length > 0 ? userAttributes : undefined,
       },
       value: distance,
-      attributes: Object.keys(eventAttributes).length > 0 ? eventAttributes : undefined,
+      attributes:
+        Object.keys(eventAttributes).length > 0 ? eventAttributes : undefined,
     });
 
     // Revalidate all pages that show gamification data
@@ -62,7 +97,7 @@ export async function logActivity(params: LogActivityParams) {
 
 export async function getLeaderboard(
   leaderboardKey: string,
-  city?: string
+  city?: string,
 ): Promise<TrophyApi.LeaderboardRanking[]> {
   if (!process.env.TROPHY_API_KEY) return [];
 
@@ -77,8 +112,15 @@ export async function getLeaderboard(
   }
 }
 
+// Server-side: get user ID from cookies
+export async function getUserIdFromCookies(): Promise<string | null> {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  return cookieStore.get("trophy-fitness-user-id")?.value ?? null;
+}
+
 export async function getUserStats(userId: string): Promise<UserStats | null> {
-  if (!process.env.TROPHY_API_KEY) {
+  if (!process.env.TROPHY_API_KEY || !userId) {
     // Return mock data so the UI doesn't crash during development without API key
     return {
       streak: null,
@@ -92,14 +134,16 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
     // Fetch all user data in parallel
     const [streak, achievements, metrics] = await Promise.all([
       trophy.users.streak(userId).catch(() => null),
-      trophy.users.achievements(userId).catch(() => []),
+      trophy.users
+        .achievements(userId, { includeIncomplete: "true" })
+        .catch(() => []),
       trophy.users.allMetrics(userId).catch(() => []),
     ]);
 
     // Try to get points (may not be configured)
     let pointsResponse: TrophyApi.GetUserPointsResponse | null = null;
     try {
-      pointsResponse = await trophy.users.points(userId, "fitness-xp");
+      pointsResponse = await trophy.users.points(userId, "xp");
     } catch {
       // Points system might not be configured
     }

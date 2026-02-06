@@ -1,0 +1,59 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { getUserId, getUserName } from "@/lib/user";
+import { identifyUser } from "@/app/actions";
+
+interface UserContextType {
+  userId: string | null;
+  isLoading: boolean;
+}
+
+const UserContext = createContext<UserContextType>({
+  userId: null,
+  isLoading: true,
+});
+
+export function useUser() {
+  return useContext(UserContext);
+}
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        // Get or create user ID from localStorage (also creates name for new users)
+        const id = getUserId();
+        setUserId(id);
+
+        // Get user's name and timezone
+        const name = getUserName();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        // Identify user with Trophy API
+        await identifyUser(id, name ?? undefined, tz);
+      } catch (error) {
+        console.error("Failed to initialize user:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initUser();
+  }, []);
+
+  return (
+    <UserContext.Provider value={{ userId, isLoading }}>
+      {children}
+    </UserContext.Provider>
+  );
+}

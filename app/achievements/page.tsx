@@ -1,10 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getUserStats } from "@/app/actions";
+import { getUserStats, getUserIdFromCookies } from "@/app/actions";
 import { Award } from "lucide-react";
 
 export default async function AchievementsPage() {
-  const stats = await getUserStats("current_user");
+  const userId = await getUserIdFromCookies();
+  const stats = await getUserStats(userId ?? "");
 
   // Split achievements into earned and locked
   const earnedAchievements =
