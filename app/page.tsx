@@ -2,20 +2,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Flame, Trophy, Footprints, Bike, Waves, Zap, TrendingUp, Plus } from "lucide-react";
-import { getUserStats, getUserIdFromCookies } from "./actions";
+import { getUserStats, getUserIdFromCookies, getRecentActivities } from "./actions";
 import { getLevelInfo } from "@/lib/constants";
 import { LogActivityDialog } from "@/components/log-activity-dialog";
 
-// Recent activities would come from a real activity log in production
-const recentActivities = [
-  { id: 1, type: "run", distance: 5.2, unit: "km", time: "Today, 8:00 AM", icon: Footprints, color: "text-blue-500" },
-  { id: 2, type: "cycle", distance: 24.5, unit: "km", time: "Yesterday, 6:30 PM", icon: Bike, color: "text-emerald-500" },
-  { id: 3, type: "swim", distance: 1200, unit: "m", time: "Feb 4, 7:00 AM", icon: Waves, color: "text-cyan-500" },
-];
+const activityConfig = {
+  run: { icon: Footprints, color: "text-blue-500", label: "Run" },
+  cycle: { icon: Bike, color: "text-emerald-500", label: "Cycle" },
+  swim: { icon: Waves, color: "text-cyan-500", label: "Swim" },
+};
+
+function formatActivityDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+}
 
 export default async function Dashboard() {
   const userId = await getUserIdFromCookies();
-  const stats = await getUserStats(userId ?? "");
+  const [stats, recentActivities] = await Promise.all([
+    getUserStats(userId ?? ""),
+    getRecentActivities(userId ?? ""),
+  ]);
 
   // Calculate streak info
   const streakLength = stats?.streak?.length ?? 0;
@@ -147,35 +164,44 @@ export default async function Dashboard() {
             Recent Activity
           </h3>
         </div>
-        <div className="space-y-2">
-          {recentActivities.map((activity) => {
-            const Icon = activity.icon;
-            return (
-              <div
-                key={activity.id}
-                className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/40 shadow-soft hover:shadow-soft-lg transition-shadow"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-secondary/80 flex items-center justify-center">
-                    <Icon className={`w-5 h-5 ${activity.color}`} />
-                  </div>
-                  <div>
-                    <div className="font-medium capitalize text-sm">{activity.type}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {activity.time}
+        {recentActivities.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            No recent activities. Log your first workout to get started!
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {recentActivities.map((activity) => {
+              const config = activityConfig[activity.type];
+              const Icon = config.icon;
+              return (
+                <div
+                  key={activity.id}
+                  className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/40 shadow-soft hover:shadow-soft-lg transition-shadow"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/80 flex items-center justify-center">
+                      <Icon className={`w-5 h-5 ${config.color}`} />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{config.label}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatActivityDate(activity.date)}
+                      </div>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <span className="font-semibold">
+                      {activity.type === "swim" ? activity.value.toFixed(0) : activity.value.toFixed(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {activity.unit}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="font-semibold">{activity.distance}</span>
-                  <span className="text-xs text-muted-foreground ml-1">
-                    {activity.unit}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

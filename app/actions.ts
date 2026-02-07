@@ -161,3 +161,73 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
     return null;
   }
 }
+
+export interface RecentActivity {
+  id: string;
+  type: "run" | "cycle" | "swim";
+  value: number;
+  unit: string;
+  date: string;
+}
+
+export async function getRecentActivities(
+  userId: string
+): Promise<RecentActivity[]> {
+  if (!process.env.TROPHY_API_KEY || !userId) {
+    return [];
+  }
+
+  // Get date range for last 30 days
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  const metrics = [
+    { key: "distance_run", type: "run" as const, unit: "km" },
+    { key: "distance_cycled", type: "cycle" as const, unit: "km" },
+    { key: "distance_swum", type: "swim" as const, unit: "m" },
+  ];
+
+  try {
+    // Fetch daily summaries for all metrics in parallel
+    const summaries = await Promise.all(
+      metrics.map(async (metric) => {
+        try {
+          const data = await trophy.users.metricEventSummary(
+            userId,
+            metric.key,
+            {
+              aggregation: "daily",
+              startDate: formatDate(startDate),
+              endDate: formatDate(endDate),
+            }
+          );
+          return data
+            .filter((item) => item.change > 0)
+            .map((item) => ({
+              id: `${metric.key}-${item.date}`,
+              type: metric.type,
+              value: item.change,
+              unit: metric.unit,
+              date: item.date,
+            }));
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    // Flatten and sort by date (most recent first)
+    const allActivities = summaries.flat().sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    // Return the most recent 5 activities
+    return allActivities.slice(0, 5);
+  } catch (error) {
+    console.error("Failed to fetch recent activities:", error);
+    return [];
+  }
+}
