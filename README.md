@@ -19,7 +19,7 @@
     </a>
     <br />
     <br />
-    <a href="https://github.com/trophyso/example-fitness-platform">View Demo</a>
+    <a href="https://examples.trophy.so/fitness-platform">View Demo</a>
     &middot;
     <a href="https://github.com/trophyso/example-fitness-platform/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
