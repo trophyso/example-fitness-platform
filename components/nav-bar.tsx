@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { Home, Trophy, User, Plus, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/components/user-provider";
 
 import { LogActivityDialog } from "@/components/log-activity-dialog";
 
 export function NavBar() {
   const pathname = usePathname();
+  const { userName } = useUser();
 
   const links = [
     { href: "/", label: "Home", icon: Home },
@@ -22,7 +24,7 @@ export function NavBar() {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex h-screen w-64 flex-col border-r border-border/50 bg-sidebar fixed left-0 top-0 z-30">
-        <div className="p-6 pb-8">
+        <div className="p-6 pb-8 space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Trophy className="w-4 h-4 text-primary-foreground" />
@@ -31,6 +33,9 @@ export function NavBar() {
               TrophyFitness
             </h1>
           </div>
+          {userName && (
+            <p className="text-sm text-muted-foreground truncate pl-0.5">@{userName}</p>
+          )}
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {links.map((link) => {
@@ -85,8 +90,8 @@ export function NavBar() {
           })}
           {/* Mobile FAB */}
           <LogActivityDialog>
-            <Button 
-              size="icon" 
+            <Button
+              size="icon"
               className="rounded-full h-14 w-14 -mt-10 shadow-soft-lg bg-primary text-primary-foreground border-4 border-background"
             >
               <Plus className="w-6 h-6" />

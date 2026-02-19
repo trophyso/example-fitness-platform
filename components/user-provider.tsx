@@ -12,11 +12,13 @@ import { identifyUser } from "@/app/actions";
 
 interface UserContextType {
   userId: string | null;
+  userName: string | null;
   isLoading: boolean;
 }
 
 const UserContext = createContext<UserContextType>({
   userId: null,
+  userName: null,
   isLoading: true,
 });
 
@@ -26,20 +28,19 @@ export function useUser() {
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initUser = async () => {
       try {
-        // Get or create user ID from localStorage (also creates name for new users)
         const id = getUserId();
         setUserId(id);
 
-        // Get user's name and timezone
         const name = getUserName();
+        setUserName(name);
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        // Identify user with Trophy API
         await identifyUser(id, name ?? undefined, tz);
       } catch (error) {
         console.error("Failed to initialize user:", error);
@@ -52,7 +53,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, isLoading }}>
+    <UserContext.Provider value={{ userId, userName, isLoading }}>
       {children}
     </UserContext.Provider>
   );
