@@ -31,17 +31,6 @@
 
 ## About The Project
 
-<!-- Placeholder for Demo Video -->
-<!--
-<div align="center">
-  <video width="75%" autoplay loop muted playsinline style="border-radius: 12px;">
-    <source src="assets/demo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
-<br />
--->
-
 This is a comprehensive example of a consumer fitness application (like Strava or Nike Run Club) powered by Trophy. It demonstrates how to handle multiple activity types, complex leaderboards, and a unified progression system.
 
 **Key Features:**
@@ -54,10 +43,9 @@ This is a comprehensive example of a consumer fitness application (like Strava o
 
 ### Built With
 
-- **Next.js 15** (App Router)
+- **Next.js** (App Router)
 - **Shadcn/UI** & **TailwindCSS**
 - **Lucide Icons**
-- **Recharts** for visualizations
 - **Trophy** for the gamification engine
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -65,18 +53,6 @@ This is a comprehensive example of a consumer fitness application (like Strava o
 <!-- GETTING STARTED -->
 
 ## Getting Started
-
-First:
-
-```bash
-npm install
-```
-
-Then:
-
-```bash
-npm run dev
-```
 
 ### Prerequisites
 
@@ -92,6 +68,13 @@ cp .env.example .env.local
 
 ```bash
 TROPHY_API_KEY='Your API key'
+```
+
+### Install & Run
+
+```bash
+npm install
+npm run dev
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
