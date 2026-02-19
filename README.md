@@ -11,7 +11,7 @@
   <p align="center">
     A Strava-lite fitness tracker built with Next.js showing how to build high-retention consumer apps with Trophy.
     <br />
-    <a href="https://docs.trophy.so/guides/tutorials/how-to-build-a-fitness-app">
+    <a href="https://docs.trophy.so/guides/gamified-fitness-platform">
         <strong>Tutorial »</strong>
     </a>
     <a href="http://trophy.so?utm_source=github&utm_medium=example-apps&utm_campaign=example-fitness-app">
@@ -34,10 +34,11 @@
 This is a comprehensive example of a consumer fitness application (like Strava or Nike Run Club) powered by Trophy. It demonstrates how to handle multiple activity types, complex leaderboards, and a unified progression system.
 
 **Key Features:**
-*   **Multi-Sport Tracking:** Log Runs, Rides, and Swims with specific attributes (Pace, Style).
-*   **XP Normalization:** A unified "Level" system that weights activities fairly (e.g., 1km Swim > 1km Cycle).
-*   **Advanced Leaderboards:** Switch between "Global" and "City" views to see local rankings.
-*   **Activity Streaks:** A daily consistency loop that rewards simply showing up.
+
+- **Multi-Sport Tracking:** Log Runs, Rides, and Swims with specific attributes (Pace, Style).
+- **XP Normalization:** A unified "Level" system that weights activities fairly (e.g., 1km Swim > 1km Cycle).
+- **Advanced Leaderboards:** Switch between "Global" and "City" views to see local rankings.
+- **Activity Streaks:** A daily consistency loop that rewards simply showing up.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
