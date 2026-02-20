@@ -47,8 +47,8 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
     }
 
     const distNum = parseFloat(distance);
-    if (!distNum || distNum <= 0) {
-      toast.error("Please enter a valid distance");
+    if (!distNum || distNum <= 0 || distNum > 1000) {
+      toast.error("Please enter a valid distance between 0 and 1000");
       return;
     }
 
@@ -167,9 +167,9 @@ export function LogActivityDialog({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-medium shadow-soft" 
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-medium shadow-soft"
               disabled={isPending || !distance}
             >
               {isPending ? (
