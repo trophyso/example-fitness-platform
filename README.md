@@ -11,8 +11,8 @@
   <p align="center">
     A Strava-lite fitness tracker built with Next.js showing how to build high-retention consumer apps with Trophy.
     <br />
-    <a href="https://docs.trophy.so/guides/gamified-fitness-platform">
-        <strong>Tutorial »</strong>
+    <a href="https://docs.trophy.so/getting-started/quickstart">
+        <strong>Docs »</strong>
     </a>
     <a href="http://trophy.so?utm_source=github&utm_medium=example-apps&utm_campaign=example-fitness-app">
         <strong>Trophy »</strong>
@@ -47,7 +47,7 @@ This is a comprehensive example of a consumer fitness application (like Strava o
 - **Next.js** (App Router)
 - **Shadcn/UI** & **TailwindCSS**
 - **Lucide Icons**
-- **Trophy** for the gamification engine
+- **Trophy** for streaks, XP levels and leaderboards
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -59,7 +59,7 @@ This is a comprehensive example of a consumer fitness application (like Strava o
 
 To use the gamification features, you'll need a Trophy account.
 
-1.  **Create an Account:** [Sign up at Trophy.so](http://app.trophy.so/sign-up?utm_source=github&utm_medium=example-apps&utm_campaign=example-fitness-app).
+1.  **Get access:** [Book a demo](https://trophy.so/contact-sales?utm_source=github&utm_medium=example-apps&utm_campaign=example-fitness-app) if you don't have a Trophy account yet.
 2.  **Get your API Key:** Copy it from the [Developer Settings](https://app.trophy.so/settings/developer).
 3.  **Configure Environment:**
 
